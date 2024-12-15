@@ -2,7 +2,7 @@
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/brakmic/hpx-builder)
 ![Docker Image Size](https://img.shields.io/docker/image-size/brakmic/hpx-builder/latest)
-![GitHub License](https://img.shields.io/github/license/brakmic/hpx-builder)
+![GitHub License](https://img.shields.io/github/license/brakmic/hpx_docker)
 
 ## Table of Contents
 
