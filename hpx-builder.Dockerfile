@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS hpx-builder
+FROM ubuntu:24.04 AS hpx-builder
 
 # Set non-interactive mode for apt
 ENV DEBIAN_FRONTEND=noninteractive
@@ -21,10 +21,12 @@ RUN apt update && apt install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set environment variables for HPX
-ARG HPX_TAG=v1.10.0
+ARG HPX_TAG=v1.11.0
 ARG HPX_ASIO=ASIO
+ARG HPX_BUILD_TYPE=Release
 ENV HPX_TAG=${HPX_TAG}
 ENV HPX_ASIO=${HPX_ASIO}
+ENV HPX_BUILD_TYPE=${HPX_BUILD_TYPE}
 ENV HPX_SOURCE_DIR=/hpx
 ENV HPX_BUILD_DIR=/hpx/build
 
@@ -38,7 +40,7 @@ RUN mkdir -p ${HPX_BUILD_DIR} \
     && cd ${HPX_BUILD_DIR} \
     && cmake .. \
         -DCMAKE_INSTALL_PREFIX=/usr/local/hpx \
-        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_BUILD_TYPE=${HPX_BUILD_TYPE} \
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
         -DBUILD_SHARED_LIBS=ON \
         -DHPX_WITH_ASIO=${HPX_ASIO} \
