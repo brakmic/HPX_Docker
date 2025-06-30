@@ -261,12 +261,12 @@ This output confirms that HPX successfully sorted the vector in parallel.
 The HPX Builder image supports build arguments to customize the HPX build process.
 
 - **`HPX_TAG`**: Specifies the HPX version to build.
-  - **Default**: `v1.10.0`
+  - **Default**: `v1.11.0`
   - **Usage**:
     ```bash
     docker build -t brakmic/hpx-builder:v1.11.0 \
       -f docker/hpx-builder.Dockerfile \
-      --build-arg HPX_TAG=v1.10.0 \
+      --build-arg HPX_TAG=v1.11.0 \
       .
     ```
 
@@ -275,7 +275,7 @@ The HPX Builder image supports build arguments to customize the HPX build proces
   - **Default**: `ASIO`
   - **Usage**:
     ```bash
-    docker build -t brakmic/hpx:v1.10.0-asio \
+    docker build -t brakmic/hpx:v1.11.0-asio \
       -f docker/hpx-builder.Dockerfile \
       --build-arg HPX_WITH_ASIO=ASIO \
       .
