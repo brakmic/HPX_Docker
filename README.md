@@ -277,6 +277,8 @@ process. BuildKit is required and is the default in current Docker versions.
 - **`HPX_GENERIC_CONTEXT_COROUTINES`**: Selects the generic context coroutine
   implementation. Default: `auto`, which enables it on arm64 and other
   non-amd64 architectures and disables it on amd64.
+- **`HPX_WITH_MPI`**: Installs OpenMPI and enables the MPI parcelport.
+  Default: `OFF`.
 - **`HPX_IMAGE_REVISION`**: Source revision recorded in the image labels.
   Default: `unknown`.
 

@@ -38,6 +38,19 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         libzstd-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Optional MPI parcelport support. The packages are installed in a separate
+# layer so the main toolchain layer stays cached when the variant changes.
+ARG HPX_WITH_MPI=OFF
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    if [ "${HPX_WITH_MPI}" = "ON" ]; then \
+        apt-get update \
+        && apt-get install -y --no-install-recommends \
+            libopenmpi-dev \
+            openmpi-bin \
+        && rm -rf /var/lib/apt/lists/*; \
+    fi
+
 # Build arguments. Override them on the docker build command line to select
 # another HPX release, C++ standard, or compression support.
 ARG HPX_TAG=v1.11.0
@@ -93,6 +106,7 @@ RUN --mount=type=cache,target=/root/.ccache \
         -DHPX_WITH_CXX_STANDARD="${HPX_CXX_STANDARD}" \
         -DHPX_WITH_MALLOC="${HPX_MALLOC}" \
         -DHPX_WITH_GENERIC_CONTEXT_COROUTINES="${generic}" \
+        -DHPX_WITH_PARCELPORT_MPI="${HPX_WITH_MPI}" \
         -DHPX_WITH_COMPRESSION_BZIP2="${HPX_COMPRESSION_BZIP2}" \
         -DHPX_WITH_EXAMPLES=OFF \
         -DHPX_WITH_TESTS=OFF \
