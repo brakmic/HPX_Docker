@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM ubuntu:24.04 AS hpx-builder
+FROM ubuntu:25.04 AS hpx-builder
 
 # Keep apt non-interactive during the build.
 ENV DEBIAN_FRONTEND=noninteractive
