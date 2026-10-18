@@ -106,7 +106,9 @@ jobs:
             HPX_BUILD_JOBS=4
             HPX_IMAGE_REVISION=${{ steps.settings.outputs.revision }}
           tags: ${{ steps.meta-ghcr.outputs.tags }}
-          labels: ${{ steps.meta-ghcr.outputs.labels }}
+          labels: |
+            ${{ steps.meta-ghcr.outputs.labels }}
+            org.opencontainers.image.revision=${{ steps.settings.outputs.revision }}
           cache-from: type=gha,scope=${{ steps.settings.outputs.cache_scope }}
           cache-to: type=gha,mode=max,scope=${{ steps.settings.outputs.cache_scope }}
 
@@ -147,7 +149,9 @@ jobs:
             HPX_BUILD_JOBS=4
             HPX_IMAGE_REVISION=${{ steps.settings.outputs.revision }}
           tags: ${{ steps.meta-dockerhub.outputs.tags }}
-          labels: ${{ steps.meta-dockerhub.outputs.labels }}
+          labels: |
+            ${{ steps.meta-dockerhub.outputs.labels }}
+            org.opencontainers.image.revision=${{ steps.settings.outputs.revision }}
           cache-from: type=gha,scope=${{ steps.settings.outputs.cache_scope }}
 
   release:
