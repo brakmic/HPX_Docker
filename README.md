@@ -3,6 +3,7 @@
 ![Docker Pulls](https://img.shields.io/docker/pulls/brakmic/hpx-builder)
 ![Docker Image Size](https://img.shields.io/docker/image-size/brakmic/hpx-builder/latest)
 ![GitHub License](https://img.shields.io/github/license/brakmic/hpx_docker)
+![CI](https://github.com/brakmic/HPX_Docker/actions/workflows/ci.yml/badge.svg)
 
 ## Table of Contents
 
@@ -37,7 +38,7 @@ The **HPX Builder Docker Image** provides a pre-configured environment for C++ d
 ## Features
 
 - **Precompiled HPX Libraries:** Quickly integrate HPX into your projects without manual compilation.
-- **Boost.Asio Integration:** Utilizes Boost.Asio for asynchronous operations, ensuring compatibility and performance.
+- **Standalone Asio Integration:** Uses the standalone Asio library from Ubuntu for asynchronous operations.
 - **Memory Allocator Support:** Configured to use `jemalloc` for optimized memory management.
 - **Customizable Builds:** Supports build arguments to tailor the HPX build to your specific requirements.
 - **Efficient Docker Layers:** Optimized Dockerfile structure for faster builds and smaller image sizes.
@@ -57,6 +58,10 @@ Retrieve the latest HPX Builder image from Docker Hub:
 ```bash
 docker pull brakmic/hpx-builder:latest
 ```
+
+The stable channel is HPX 1.11. `latest` always points to the newest stable
+release. HPX 2.0 images are published as pre-release tags and never update
+`latest`.
 
 ### Running the Builder Container
 
@@ -90,10 +95,8 @@ project(MyHPXApp)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Specify the path to HPX installation
-set(HPX_ROOT "/usr/local/hpx")
-
-# Find HPX
+# HPX is found through CMAKE_PREFIX_PATH=/usr/local/hpx,
+# which the builder image sets for you.
 find_package(HPX REQUIRED)
 
 add_executable(my_hpx_app src/main.cpp)
@@ -101,6 +104,9 @@ add_executable(my_hpx_app src/main.cpp)
 # Link HPX libraries
 target_link_libraries(my_hpx_app PRIVATE HPX::hpx HPX::wrap_main)
 ```
+
+The example uses C++17, which matches the stable HPX 1.11 image. When you
+build against an HPX 2.0 pre-release image, use C++20 or newer.
 
 ### Compiling and Linking Your Application
 
@@ -158,10 +164,8 @@ project(MyHPXApp)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Specify the path to HPX installation
-set(HPX_ROOT "/usr/local/hpx")
-
-# Find HPX
+# HPX is found through CMAKE_PREFIX_PATH=/usr/local/hpx,
+# which the builder image sets for you.
 find_package(HPX REQUIRED)
 
 add_executable(my_hpx_app src/main.cpp)
@@ -228,7 +232,7 @@ int main()
 4. **Configure the Project with CMake:**
 
    ```bash
-   cmake .. -DCMAKE_PREFIX_PATH=/usr/local
+   cmake .. -DCMAKE_PREFIX_PATH=/usr/local/hpx
    ```
 
 5. **Build the Application:**
@@ -258,28 +262,40 @@ This output confirms that HPX successfully sorted the vector in parallel.
 
 ### Custom Build Arguments
 
-The HPX Builder image supports build arguments to customize the HPX build process.
+The HPX Builder image supports build arguments to customize the HPX build
+process. BuildKit is required and is the default in current Docker versions.
 
-- **`HPX_TAG`**: Specifies the HPX version to build.
-  - **Default**: `v1.11.0`
-  - **Usage**:
-    ```bash
-    docker build -t brakmic/hpx-builder:v1.11.0 \
-      -f docker/hpx-builder.Dockerfile \
-      --build-arg HPX_TAG=v1.11.0 \
-      .
-    ```
+- **`HPX_TAG`**: HPX release tag to build. Default: `v1.11.0`.
+- **`HPX_BUILD_TYPE`**: CMake build type. Default: `Release`.
+- **`HPX_CXX_STANDARD`**: C++ standard used to build HPX. Default: `17`.
+  Use `20` for HPX 2.0.
+- **`HPX_COMPRESSION_BZIP2`**: Enables the BZIP2 compression plugin.
+  Default: `ON`. HPX 2.0 release candidates need `OFF` because of an upstream
+  configure error in the BZIP2 plugin.
+- **`HPX_BUILD_JOBS`**: Parallel compile jobs. Default: `2`. Raise it on
+  machines with enough memory.
+- **`HPX_IMAGE_REVISION`**: Source revision recorded in the image labels.
+  Default: `unknown`.
 
-- **`HPX_WITH_ASIO`**: Configures HPX to use either Boost.Asio or standalone Asio.
-  - **Options**: `Boost`, `ASIO`
-  - **Default**: `ASIO`
-  - **Usage**:
-    ```bash
-    docker build -t brakmic/hpx:v1.11.0-asio \
-      -f docker/hpx-builder.Dockerfile \
-      --build-arg HPX_WITH_ASIO=ASIO \
-      .
-    ```
+Stable image:
+
+```bash
+docker build -t brakmic/hpx-builder:v1.11.0 \
+  -f hpx-builder.Dockerfile \
+  --build-arg HPX_TAG=v1.11.0 \
+  .
+```
+
+HPX 2.0 pre-release image:
+
+```bash
+docker build -t brakmic/hpx-builder:2.0.0-rc1 \
+  -f hpx-builder.Dockerfile \
+  --build-arg HPX_TAG=v2.0.0-rc1 \
+  --build-arg HPX_CXX_STANDARD=20 \
+  --build-arg HPX_COMPRESSION_BZIP2=OFF \
+  .
+```
 
 ### Mounting Volumes for Development
 
@@ -306,7 +322,7 @@ docker run --rm -it \
 
    ```bash
    mkdir build && cd build
-   cmake .. -DCMAKE_PREFIX_PATH=/usr/local
+   cmake .. -DCMAKE_PREFIX_PATH=/usr/local/hpx
    make -j$(nproc)
    ```
 
@@ -314,46 +330,13 @@ docker run --rm -it \
 
 Integrate the HPX Builder image into your Continuous Integration/Continuous Deployment (CI/CD) pipelines to automate the build and testing of your HPX-based applications.
 
-**Example GitHub Actions Workflow:**
+The repository ships a CI workflow that builds the stable image, verifies the
+toolchain, and runs the bundled example. A second job builds the HPX 2.0
+pre-release image without publishing it.
 
-```yaml
-name: Build and Test HPX Application
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-
-    - name: Build HPX Builder Image
-      run: |
-        docker build -t brakmic/hpx-builder:latest \
-          -f docker/hpx-builder.Dockerfile \
-          .
-
-    - name: Build Application
-      run: |
-        docker run --rm -v ${{ github.workspace }}/my_hpx_app:/app \
-          brakmic/hpx-builder:latest \
-          bash -c "cd /app && mkdir build && cd build && cmake .. -DCMAKE_PREFIX_PATH=/usr/local && make -j$(nproc)"
-
-    - name: Run Tests
-      run: |
-        docker run --rm -v ${{ github.workspace }}/my_hpx_app:/app \
-          brakmic/hpx-builder:latest \
-          bash -c "cd /app/build && ./my_hpx_app"
-```
+See [.github/workflows/ci.yml](.github/workflows/ci.yml) for the workflow and
+[scripts/smoke-test.sh](scripts/smoke-test.sh) for the example test that CI
+runs inside the image.
 
 ## License
 
