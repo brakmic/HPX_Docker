@@ -11,5 +11,9 @@ updates:
     schedule:
       interval: weekly
     ignore:
+      # Ubuntu date tags are deliberate base-image upgrades that need a full
+      # build, demo test, and release. Dependabot should not propose them.
       - dependency-name: ubuntu
-        versions: ["25.10"]
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor

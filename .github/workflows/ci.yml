@@ -3,7 +3,21 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - ".github/**"
+      - "*.md"
+      - "LICENSE"
+      - ".gitignore"
+      - ".dockerignore"
+      - ".gitattributes"
   pull_request:
+    paths-ignore:
+      - ".github/**"
+      - "*.md"
+      - "LICENSE"
+      - ".gitignore"
+      - ".dockerignore"
+      - ".gitattributes"
   workflow_dispatch:
 
 permissions:
