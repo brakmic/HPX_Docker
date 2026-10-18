@@ -10,3 +10,6 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: ubuntu
+        versions: ["25.10"]
