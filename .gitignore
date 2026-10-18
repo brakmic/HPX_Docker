@@ -1,1 +1,5 @@
 .vscode/
+scratchpad/
+build/
+cmake-build-*/
+compile_commands.json
