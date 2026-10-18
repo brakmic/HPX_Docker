@@ -62,6 +62,33 @@ jobs:
             hpx-builder:ci \
             bash /workspace/scripts/smoke-test.sh /workspace/my_hpx_app
 
+      - name: Build the runtime image
+        run: |
+          docker build \
+            --build-arg HPX_BUILDER_IMAGE=hpx-builder \
+            --build-arg HPX_VERSION=ci \
+            -f hpx-runtime.Dockerfile \
+            -t hpx-runtime:ci \
+            .
+
+      - name: Run the example in the runtime image
+        run: |
+          mkdir -p "${RUNNER_TEMP}/hpx-app"
+          docker run --rm \
+            -v "${GITHUB_WORKSPACE}/my_hpx_app:/src:ro" \
+            -v "${RUNNER_TEMP}/hpx-app:/out" \
+            hpx-builder:ci \
+            bash -lc '
+              cp -a /src /tmp/app
+              cmake -S /tmp/app -B /out/build \
+                -DCMAKE_PREFIX_PATH=/usr/local/hpx
+              cmake --build /out/build --parallel 2
+            '
+          docker run --rm \
+            -v "${RUNNER_TEMP}/hpx-app:/app" \
+            hpx-runtime:ci \
+            /app/build/my_hpx_app
+
   experimental:
     name: Experimental HPX 2.0 image
     runs-on: ubuntu-24.04

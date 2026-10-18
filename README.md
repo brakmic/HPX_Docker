@@ -27,6 +27,7 @@
     - [Running the Example](#running-the-example)
   - [Advanced Usage](#advanced-usage)
     - [Custom Build Arguments](#custom-build-arguments)
+    - [Runtime Image](#runtime-image)
     - [Mounting Volumes for Development](#mounting-volumes-for-development)
     - [Integration with CI/CD](#integration-with-cicd)
   - [License](#license)
@@ -38,6 +39,7 @@ The **HPX Builder Docker Image** provides a pre-configured environment for C++ d
 ## Features
 
 - **Precompiled HPX Libraries:** Quickly integrate HPX into your projects without manual compilation.
+- **Slim runtime image:** Run compiled HPX applications without compilers, CMake, or development headers.
 - **Standalone Asio Integration:** Uses the standalone Asio library from Ubuntu for asynchronous operations.
 - **Memory Allocator Support:** Configured to use `jemalloc` for optimized memory management.
 - **Customizable Builds:** Supports build arguments to tailor the HPX build to your specific requirements.
@@ -301,6 +303,39 @@ docker build -t brakmic/hpx-builder:2.0.0-rc1 \
   --build-arg HPX_COMPRESSION_BZIP2=OFF \
   .
 ```
+
+### Runtime Image
+
+The repository also builds a slim runtime image that contains the HPX shared
+libraries, plugins, and their runtime dependencies, but no compiler, CMake, or
+development headers. It is about 217 MB on amd64 and 240 MB on arm64, compared
+with about 1.26 GB for the builder image.
+
+Stable releases publish `1.11.0-runtime`, `1.11-runtime`, and
+`latest-runtime`. Pre-release tags follow the same suffix and never update
+`latest-runtime`.
+
+Build the application with the builder image, then run the binary with the
+runtime image:
+
+```bash
+docker run --rm \
+  -v "$PWD/my_hpx_app:/src:ro" \
+  -v "$PWD/build:/out" \
+  brakmic/hpx-builder:1.11.0 \
+  bash -lc '
+    cmake -S /src -B /out -DCMAKE_PREFIX_PATH=/usr/local/hpx
+    cmake --build /out --parallel 2
+  '
+
+docker run --rm \
+  -v "$PWD/build:/app" \
+  brakmic/hpx-builder:1.11.0-runtime \
+  /app/my_hpx_app
+```
+
+The runtime image sets `LD_LIBRARY_PATH=/usr/local/hpx/lib` and includes
+`hpxrun.py`.
 
 ### Mounting Volumes for Development
 
