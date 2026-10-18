@@ -1,0 +1,10 @@
+.git
+.github
+.vscode
+scratchpad
+my_hpx_app
+build
+cmake-build-*
+compile_commands.json
+*.md
+LICENSE

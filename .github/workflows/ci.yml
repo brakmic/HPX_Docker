@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+jobs:
+  stable:
+    name: Stable HPX 1.11 image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build stable image
+        run: |
+          docker build \
+            --build-arg HPX_TAG=v1.11.0 \
+            --build-arg HPX_BUILD_TYPE=Release \
+            --build-arg HPX_BUILD_JOBS=4 \
+            --build-arg HPX_IMAGE_REVISION="${GITHUB_SHA}" \
+            -f hpx-builder.Dockerfile \
+            -t hpx-builder:ci \
+            .
+
+      - name: Verify toolchain and HPX version
+        run: |
+          docker run --rm hpx-builder:ci bash -lc '
+            gcc -dumpfullversion
+            cmake --version | head -1
+            grep "^set(PACKAGE_VERSION" /usr/local/hpx/lib/cmake/HPX/HPXConfigVersion.cmake
+          '
+
+      - name: Build and run the example
+        run: |
+          docker run --rm \
+            -v "${GITHUB_WORKSPACE}:/workspace:ro" \
+            hpx-builder:ci \
+            bash /workspace/scripts/smoke-test.sh /workspace/my_hpx_app
+
+  experimental:
+    name: Experimental HPX 2.0 image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    # Non-blocking until the HPX 2.0 path has passed in CI at least once.
+    continue-on-error: true
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build experimental image
+        run: |
+          docker build \
+            --build-arg HPX_TAG=v2.0.0-rc1 \
+            --build-arg HPX_BUILD_TYPE=Release \
+            --build-arg HPX_CXX_STANDARD=20 \
+            --build-arg HPX_COMPRESSION_BZIP2=OFF \
+            --build-arg HPX_BUILD_JOBS=4 \
+            --build-arg HPX_IMAGE_REVISION="${GITHUB_SHA}" \
+            -f hpx-builder.Dockerfile \
+            -t hpx-builder:ci-2.0 \
+            .
+
+      - name: Build and run the example
+        run: |
+          docker run --rm \
+            -v "${GITHUB_WORKSPACE}:/workspace:ro" \
+            hpx-builder:ci-2.0 \
+            bash /workspace/scripts/smoke-test.sh \
+              /workspace/my_hpx_app \
+              "After HPX sort: 10 20 30 40 50" \
+              20
