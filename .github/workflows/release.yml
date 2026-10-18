@@ -45,10 +45,12 @@ jobs:
             bzip2=OFF
             cache_scope=hpx-2.0
           fi
-          echo "hpx_tag=${tag}" >> "$GITHUB_OUTPUT"
-          echo "cxx_standard=${cxx_standard}" >> "$GITHUB_OUTPUT"
-          echo "bzip2=${bzip2}" >> "$GITHUB_OUTPUT"
-          echo "cache_scope=${cache_scope}" >> "$GITHUB_OUTPUT"
+          {
+            echo "hpx_tag=${tag}"
+            echo "cxx_standard=${cxx_standard}"
+            echo "bzip2=${bzip2}"
+            echo "cache_scope=${cache_scope}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
