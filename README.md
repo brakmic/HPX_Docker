@@ -48,7 +48,7 @@ The **HPX Builder Docker Image** provides a pre-configured environment for C++ d
 
 ### Prerequisites
 
-- **Docker:** Ensure Docker is installed on your system. You can download it from [here](https://www.docker.com/get-started).
+- **Docker:** Install Docker from the [Docker download page](https://www.docker.com/get-started).
 - **C++ Development Environment:** Familiarity with C++ and CMake for building HPX applications.
 
 ### Pulling the Docker Image
@@ -146,7 +146,7 @@ To demonstrate the usage of the HPX Builder image, let's walk through building a
 
 ### Project Structure
 
-```
+```text
 my_hpx_app/
 ├── CMakeLists.txt
 └── src/
@@ -251,7 +251,7 @@ After a successful build, run the application:
 
 **Expected Output:**
 
-```
+```text
 Before HPX sort: 50 20 40 10 30 
 After HPX sort: 10 20 30 40 50 
 ```
