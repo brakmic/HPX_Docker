@@ -274,6 +274,9 @@ process. BuildKit is required and is the default in current Docker versions.
   configure error in the BZIP2 plugin.
 - **`HPX_BUILD_JOBS`**: Parallel compile jobs. Default: `2`. Raise it on
   machines with enough memory.
+- **`HPX_GENERIC_CONTEXT_COROUTINES`**: Selects the generic context coroutine
+  implementation. Default: `auto`, which enables it on arm64 and other
+  non-amd64 architectures and disables it on amd64.
 - **`HPX_IMAGE_REVISION`**: Source revision recorded in the image labels.
   Default: `unknown`.
 

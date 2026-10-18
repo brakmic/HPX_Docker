@@ -48,6 +48,7 @@ ARG HPX_COMPRESSION_BZIP2=ON
 ARG HPX_BUILD_JOBS=2
 ARG HPX_INSTALL_PREFIX=/usr/local/hpx
 ARG HPX_MALLOC=jemalloc
+ARG HPX_GENERIC_CONTEXT_COROUTINES=auto
 ARG HPX_IMAGE_REVISION=unknown
 
 LABEL org.opencontainers.image.title="HPX builder" \
@@ -68,10 +69,20 @@ ENV HPX_TAG=${HPX_TAG} \
     PATH=${HPX_INSTALL_PREFIX}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     LD_LIBRARY_PATH=${HPX_INSTALL_PREFIX}/lib
 
-# Clone the release tag, configure with Ninja, compile, and install. The
-# source and build trees are removed in the same layer so they do not stay in
-# the image. The ccache mount keeps object files across local rebuilds.
+# Clone the release tag, configure with Ninja, compile, and install. HPX does
+# not enable generic context coroutines automatically on non-x86
+# architectures, so the setting follows the target architecture unless it is
+# given explicitly. The source and build trees are removed in the same layer
+# so they do not stay in the image. The ccache mount keeps object files across
+# local rebuilds.
 RUN --mount=type=cache,target=/root/.ccache \
+    generic="${HPX_GENERIC_CONTEXT_COROUTINES}"; \
+    if [ "${generic}" = "auto" ]; then \
+        case "$(dpkg --print-architecture)" in \
+            amd64) generic=OFF ;; \
+            *) generic=ON ;; \
+        esac; \
+    fi; \
     git clone --depth 1 --branch "${HPX_TAG}" "${HPX_REPO}" "${HPX_SOURCE_DIR}" \
     && cmake -S "${HPX_SOURCE_DIR}" -B "${HPX_BUILD_DIR}" -G Ninja \
         -DCMAKE_INSTALL_PREFIX="${HPX_INSTALL_PREFIX}" \
@@ -81,6 +92,7 @@ RUN --mount=type=cache,target=/root/.ccache \
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
         -DHPX_WITH_CXX_STANDARD="${HPX_CXX_STANDARD}" \
         -DHPX_WITH_MALLOC="${HPX_MALLOC}" \
+        -DHPX_WITH_GENERIC_CONTEXT_COROUTINES="${generic}" \
         -DHPX_WITH_COMPRESSION_BZIP2="${HPX_COMPRESSION_BZIP2}" \
         -DHPX_WITH_EXAMPLES=OFF \
         -DHPX_WITH_TESTS=OFF \
